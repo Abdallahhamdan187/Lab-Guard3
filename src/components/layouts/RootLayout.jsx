@@ -5,17 +5,16 @@ import {
   Package,
   FileText,
   Bell,
-  User,
   Menu,
   X,
-  Users,
   Settings,
   ClipboardList,
   ShieldCheck,
   UserCheck
 } from "lucide-react";
-import { useState } from "react";
-import { currentUser } from "@/data/mockData";
+import { useState, useMemo } from "react";
+import { mockNotifications, mockTransactions, mockEquipment } from "@/data/mockData";
+import { generateSmartNotifications } from "@/utils/notificationEngine";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -42,28 +41,80 @@ export function RootLayout() {
 
   if (!user) return <Navigate to="/login" />;
 
+  // Generate smart notifications for this specific user
+  const smartNotifs = useMemo(() =>
+    generateSmartNotifications(mockTransactions, mockEquipment, user),
+    [user.name, user.role]
+  );
+
+  // Filter static notifications: show if role matches AND (forUsers is empty OR user name is listed)
+  const staticNotifs = useMemo(() =>
+    mockNotifications.filter(n => {
+      const roleMatch = n.forRoles?.includes(user.role) || user.role === "admin";
+      const userMatch = !n.forUsers?.length || n.forUsers.includes(user.name);
+      return roleMatch && userMatch;
+    }),
+    [user.name, user.role]
+  );
+
+  // Merge smart + static, deduplicate by id, smart takes priority
+  const allNotifications = useMemo(() => {
+    const combined = [...smartNotifs, ...staticNotifs];
+    const seen = new Set();
+    return combined.filter(n => {
+      if (seen.has(n.id)) return false;
+      seen.add(n.id);
+      return true;
+    });
+  }, [smartNotifs, staticNotifs]);
+
+  const [readIds, setReadIds] = useState(new Set());
+  const notifications = allNotifications.map(n => ({ ...n, read: readIds.has(n.id) || n.read }));
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const markAllRead = () => setReadIds(new Set(notifications.map(n => n.id)));
+
+  const notifIconColor = {
+    success: "text-green-500",
+    error:   "text-red-500",
+    warning: "text-yellow-500",
+    info:    "text-blue-500",
+  };
+
   const handleLogout = () => {
     clearUserSession();
     navigate("/login");
   };
   const allNavItems = [
-    { path: "/", label: "Dashboard", icon: LayoutDashboard, roles: ["student", "instructor", "lab-assistant", "admin"], section: "Student Portal" },
-    { path: "/equipment", label: "Browse Equipment", icon: Package, roles: ["student", "instructor", "lab-assistant", "admin"], section: "Student Portal" },
-    { path: "/borrow", label: "Borrow/Return", icon: ClipboardList, roles: ["student", "instructor", "lab-assistant", "admin"], section: "Student Portal" },
-    { path: "/history", label: "Transaction History", icon: FileText, roles: ["student", "instructor", "lab-assistant", "admin"], section: "Student Portal" },
+    { path: "/", label: "Dashboard", icon: LayoutDashboard, roles: ["student", "admin"], section: "Student Portal" },
+    { path: "/equipment", label: "Browse Equipment", icon: Package, roles: ["student", "admin"], section: "Student Portal" },
+    { path: "/borrow", label: "Borrow/Return", icon: ClipboardList, roles: ["student", "admin"], section: "Student Portal" },
+    { path: "/history", label: "Transaction History", icon: FileText, roles: ["student", "admin"], section: "Student Portal" },
 
     { path: "/instructor", label: "Instructor Portal", icon: UserCheck, roles: ["instructor", "admin"], section: "Other Portals" },
     { path: "/lab-assistant", label: "Lab Assistant Portal", icon: Settings, roles: ["lab-assistant", "admin"], section: "Other Portals" },
     { path: "/admin", label: "Admin Portal", icon: ShieldCheck, roles: ["admin"], section: "Other Portals" },
   ];
 
-  const visibleItems = allNavItems.filter(item => item.roles.includes(currentUser.role));
+  const visibleItems = allNavItems.filter(item => item.roles.includes(user.role));
 
   const studentSection = visibleItems.filter(item => item.section === "Student Portal");
   const portalSection = visibleItems.filter(item => item.section === "Other Portals");
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Must-change-password banner */}
+      {user.mustChangePassword && (
+        <div className="bg-amber-500 text-white text-sm px-4 py-2 flex items-center justify-between">
+          <span>⚠️ You must change your temporary password before continuing.</span>
+          <button
+            onClick={() => navigate("/change-password")}
+            className="ml-4 underline font-semibold hover:text-amber-100"
+          >
+            Change Now →
+          </button>
+        </div>
+      )}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-4">
@@ -89,34 +140,92 @@ export function RootLayout() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
                   <Bell size={20} />
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-[#e9333f] text-white text-xs">3</Badge>
+                  {unreadCount > 0 && (
+                    <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-[#e9333f] text-white text-xs">
+                      {unreadCount}
+                    </Badge>
+                  )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80">
-                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {/* ... Notification items ... */}
+              <DropdownMenuContent align="end" className="w-80 p-0 overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">Notifications</p>
+                    {unreadCount > 0 && (
+                      <p className="text-xs text-gray-500">{unreadCount} unread</p>
+                    )}
+                  </div>
+                  {unreadCount > 0 && (
+                    <button onClick={markAllRead} className="text-xs text-[#e9333f] hover:underline font-semibold">
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+                <div className="max-h-[400px] overflow-y-auto">
+                  {notifications.length > 0 ? notifications.map(notif => (
+                    <div
+                      key={notif.id}
+                      onClick={() => setReadIds(prev => new Set([...prev, notif.id]))}
+                      className={`px-4 py-3 border-b border-gray-100 last:border-0 cursor-pointer hover:bg-gray-50 transition-colors ${!notif.read ? "bg-red-50/50" : ""}`}
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <span className={`mt-0.5 text-base leading-none flex-shrink-0 ${notifIconColor[notif.type]}`}>
+                          {notif.type === "success" ? "✓" : notif.type === "error" ? "✕" : notif.type === "warning" ? "⚠" : "ℹ"}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-xs font-semibold text-gray-900 ${!notif.read ? "font-bold" : ""}`}>{notif.title}</p>
+                          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{notif.message}</p>
+                          <p className="text-[10px] text-gray-400 mt-1">{new Date(notif.date).toLocaleDateString()}</p>
+                        </div>
+                        {!notif.read && <div className="w-2 h-2 bg-[#e9333f] rounded-full mt-1 flex-shrink-0" />}
+                      </div>
+                    </div>
+                  )) : (
+                    <div className="px-4 py-10 text-center">
+                      <p className="text-2xl mb-2">🔔</p>
+                      <p className="text-sm text-gray-500 font-medium">You're all caught up!</p>
+                      <p className="text-xs text-gray-400 mt-1">No notifications right now.</p>
+                    </div>
+                  )}
+                </div>
+                {notifications.length > 0 && (
+                  <div className="px-4 py-2 border-t border-gray-100 bg-gray-50 text-center">
+                    <p className="text-xs text-gray-400">{notifications.length} total notifications</p>
+                  </div>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 hover:bg-gray-100 rounded-lg p-2 transition-colors">
-                  <img src={currentUser.imageUrl} alt={currentUser.name} className="w-8 h-8 rounded-full object-cover" />
+                  <img src={user.imageUrl || "https://github.com/shadcn.png"} alt={user.name} className="w-8 h-8 rounded-full object-cover" />
                   <div className="text-left hidden md:block">
-                    <p className="text-sm font-medium">{currentUser.name}</p>
-                    <p className="text-xs text-gray-500 capitalize">{currentUser.role}</p>
+                    <p className="text-sm font-medium">{user.name}</p>
+                    <p className="text-xs text-gray-500 capitalize">{user.role}</p>
                   </div>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-
+              <DropdownMenuContent align="end" className="w-52">
+                <div className="px-3 py-2 border-b border-gray-100">
+                  <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
+                  <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                  <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize text-white bg-[#e9333f]">{user.role}</span>
+                </div>
                 <DropdownMenuItem
-                  className="text-red-600 cursor-pointer"
+                  className="cursor-pointer gap-2 mt-1"
+                  onClick={() => navigate("/change-password")}
+                >
+                  🔒 Change Password
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-red-600 cursor-pointer gap-2"
                   onClick={handleLogout}
                 >
-                  Logout
-                </DropdownMenuItem>              </DropdownMenuContent>
+                  🚪 Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
@@ -130,7 +239,8 @@ export function RootLayout() {
           `}
         >
           <nav className="p-4 space-y-2 h-[calc(100vh-73px)] overflow-y-auto">
-            {/* Render Student Section */}
+            {/* Render Student Section — only if user has access to these pages */}
+            {studentSection.length > 0 && (
             <div className="mb-6">
               <p className="text-xs uppercase text-gray-400 mb-2 px-3">Student Portal</p>
               {studentSection.map((item) => {
@@ -150,6 +260,7 @@ export function RootLayout() {
                 );
               })}
             </div>
+            )}
 
             {/* Render Portal Section (Only if user has access to at least one) */}
             {portalSection.length > 0 && (

@@ -5,55 +5,60 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { exportToPDF, exportToExcel } from "../../utils/exportUtils";
+import { exportToPDF, exportToExcel } from "@/utils/exportUtils";
+import { getUserSession } from "@/utils/auth";
 import { toast } from "sonner";
 
 export function TransactionHistory() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState("all");
+  const [typeFilter, setTypeFilter]   = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [dateTo,   setDateTo]   = useState("");
 
-  // Filter transactions
-  const filteredTransactions = mockTransactions.filter(txn => {
-    const matchesSearch = txn.equipmentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  // Get the logged-in user from session
+  const sessionUser = getUserSession();
+
+  // Only show transactions that belong to the logged-in student (match by name)
+  const myTransactions = mockTransactions.filter(
+    txn => txn.userName === sessionUser?.name
+  );
+
+  // Apply the search / type / status / date filters on top of that
+  const filteredTransactions = myTransactions.filter(txn => {
+    const matchesSearch =
+      txn.equipmentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       txn.purpose.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = typeFilter === "all" || txn.type === typeFilter;
+    const matchesType   = typeFilter   === "all" || txn.type   === typeFilter;
     const matchesStatus = statusFilter === "all" || txn.status === statusFilter;
 
     let matchesDate = true;
-    if (dateFrom) {
-      matchesDate = new Date(txn.requestDate) >= new Date(dateFrom);
-    }
-    if (dateTo && matchesDate) {
-      matchesDate = new Date(txn.requestDate) <= new Date(dateTo);
-    }
+    if (dateFrom) matchesDate = new Date(txn.requestDate) >= new Date(dateFrom);
+    if (dateTo && matchesDate) matchesDate = new Date(txn.requestDate) <= new Date(dateTo);
 
     return matchesSearch && matchesType && matchesStatus && matchesDate;
   });
 
   const handleExportPDF = () => {
-    exportToPDF(filteredTransactions, 'transaction-history.pdf');
+    exportToPDF(
+      filteredTransactions,
+      `my-transactions-${sessionUser?.name?.replace(/\s+/g, "-") || "student"}.pdf`,
+      `Transaction History — ${sessionUser?.name || "Student"}`
+    );
     toast.success("PDF exported successfully!");
   };
 
   const handleExportExcel = () => {
-    exportToExcel(filteredTransactions, 'transaction-history.xlsx');
+    exportToExcel(
+      filteredTransactions,
+      `my-transactions-${sessionUser?.name?.replace(/\s+/g, "-") || "student"}.xlsx`,
+      `Transaction History — ${sessionUser?.name || "Student"}`
+    );
     toast.success("Excel file exported successfully!");
   };
 
@@ -63,7 +68,12 @@ export function TransactionHistory() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Transaction History</h1>
-          <p className="text-gray-600 mt-1">View and export your equipment transaction records</p>
+          <p className="text-gray-600 mt-1">
+            Your personal equipment transaction records
+            {sessionUser?.name && (
+              <span className="ml-1 text-[#e9333f] font-medium">— {sessionUser.name}</span>
+            )}
+          </p>
         </div>
 
         <div className="flex gap-2">
@@ -71,6 +81,7 @@ export function TransactionHistory() {
             onClick={handleExportPDF}
             variant="outline"
             className="flex items-center gap-2"
+            disabled={filteredTransactions.length === 0}
           >
             <FileText size={16} />
             Export PDF
@@ -78,6 +89,7 @@ export function TransactionHistory() {
           <Button
             onClick={handleExportExcel}
             className="flex items-center gap-2 bg-[#e9333f] hover:bg-[#d12233] text-white"
+            disabled={filteredTransactions.length === 0}
           >
             <Download size={16} />
             Export Excel
@@ -123,41 +135,40 @@ export function TransactionHistory() {
             </SelectContent>
           </Select>
 
-          <div className="flex gap-2">
-            <Input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              placeholder="From"
-            />
+          <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-1 flex-1">
+              <span className="text-xs text-gray-500 font-medium pl-1">From</span>
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-1 flex-1">
+              <span className="text-xs text-gray-500 font-medium pl-1">To</span>
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+              />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
-          <p className="text-sm text-gray-600">Total Transactions</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{filteredTransactions.length}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
-          <p className="text-sm text-gray-600">Approved</p>
-          <p className="text-2xl font-bold text-green-600 mt-1">
-            {filteredTransactions.filter(t => t.status === 'Approved').length}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
-          <p className="text-sm text-gray-600">Pending</p>
-          <p className="text-2xl font-bold text-yellow-600 mt-1">
-            {filteredTransactions.filter(t => t.status === 'Pending').length}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
-          <p className="text-sm text-gray-600">Completed</p>
-          <p className="text-2xl font-bold text-blue-600 mt-1">
-            {filteredTransactions.filter(t => t.status === 'Completed').length}
-          </p>
-        </div>
+        {[
+          { label: "Total Transactions", value: filteredTransactions.length,                                           color: "text-gray-900" },
+          { label: "Approved",           value: filteredTransactions.filter(t => t.status === "Approved").length,   color: "text-green-600" },
+          { label: "Pending",            value: filteredTransactions.filter(t => t.status === "Pending").length,    color: "text-yellow-600" },
+          { label: "Completed",          value: filteredTransactions.filter(t => t.status === "Completed").length,  color: "text-blue-600" },
+        ].map(stat => (
+          <div key={stat.label} className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
+            <p className="text-sm text-gray-600">{stat.label}</p>
+            <p className={`text-2xl font-bold mt-1 ${stat.color}`}>{stat.value}</p>
+          </div>
+        ))}
       </div>
 
       {/* Transactions Table */}
@@ -196,10 +207,11 @@ export function TransactionHistory() {
                       <p className="text-sm font-medium text-gray-900">{txn.equipmentName}</p>
                     </TableCell>
                     <TableCell>
-                      <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${txn.type === 'Borrow'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-purple-100 text-purple-800'
-                        }`}>
+                      <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                        txn.type === "Borrow"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-purple-100 text-purple-800"
+                      }`}>
                         {txn.type}
                       </span>
                     </TableCell>
@@ -213,15 +225,20 @@ export function TransactionHistory() {
                       <StatusBadge status={txn.status} />
                     </TableCell>
                     <TableCell>
-                      <p className="text-sm text-gray-600">{txn.approvedBy || '-'}</p>
+                      <p className="text-sm text-gray-600">{txn.approvedBy || "—"}</p>
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
-                    <FileText className="mx-auto text-gray-400 mb-2" size={48} />
-                    <p className="text-gray-600">No transactions found</p>
+                  <TableCell colSpan={7} className="text-center py-12">
+                    <FileText className="mx-auto text-gray-300 mb-3" size={48} />
+                    <p className="text-gray-500 font-medium">No transactions found</p>
+                    <p className="text-gray-400 text-sm mt-1">
+                      {myTransactions.length === 0
+                        ? "You have no transaction records yet."
+                        : "Try adjusting your search or filters."}
+                    </p>
                   </TableCell>
                 </TableRow>
               )}

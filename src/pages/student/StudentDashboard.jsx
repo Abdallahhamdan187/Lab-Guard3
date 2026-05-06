@@ -4,9 +4,10 @@ import { EquipmentCard } from "@/components/shared/EquipmentCard";
 import { mockEquipment, mockTransactions, mockNotifications } from "@/data/mockData";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router-dom";
 
 export function StudentDashboard() {
+  const navigate = useNavigate();
   // Calculate statistics
   const activeBorrows = mockTransactions.filter(t => t.type === 'Borrow' && t.status === 'Approved' && !t.returnDate).length;
   const pendingRequests = mockTransactions.filter(t => t.status === 'Pending').length;
@@ -196,7 +197,11 @@ export function StudentDashboard() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {mockEquipment.filter(e => e.availableQuantity > 0).slice(0, 4).map((equipment) => (
-            <EquipmentCard key={equipment.id} equipment={equipment} />
+            <EquipmentCard
+              key={equipment.id}
+              equipment={equipment}
+              onBorrow={() => navigate("/borrow", { state: { selectedEquipmentId: equipment.id } })}
+            />
           ))}
         </div>
       </div>
