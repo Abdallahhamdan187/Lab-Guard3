@@ -203,9 +203,9 @@
  */
 
 export const EMAILJS_CONFIG = {
-  publicKey:  "YOUR_PUBLIC_KEY",   // Dashboard → Account → General → Public Key
-  serviceId:  "YOUR_SERVICE_ID",   // Dashboard → Email Services → your service ID
-  templateId: "YOUR_TEMPLATE_ID",  // Dashboard → Email Templates → your template ID
+  publicKey: "AJhBewuHl2OhJk_lO",   // Dashboard → Account → General → Public Key
+  serviceId: "service_q7146uv",   // Dashboard → Email Services → your service ID
+  templateId: "template_w037g2e",  // Dashboard → Email Templates → your template ID
 };
 
 export const isEmailJSConfigured = () =>
@@ -229,18 +229,18 @@ export async function sendRegistrationEmail({ toName, toEmail, role, department,
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        service_id:  EMAILJS_CONFIG.serviceId,
+        service_id: EMAILJS_CONFIG.serviceId,
         template_id: EMAILJS_CONFIG.templateId,
-        user_id:     EMAILJS_CONFIG.publicKey,
+        user_id: EMAILJS_CONFIG.publicKey,
         template_params: {
-          to_name:         toName,
-          to_email:        toEmail,
-          user_email:      toEmail,
-          user_role:       role,
+          to_name: toName,
+          to_email: toEmail,
+          user_email: toEmail,
+          user_role: role,
           user_department: department,
-          temp_password:   tempPassword,
-          login_url:       window.location.origin + "/login",
-          from_name:       "LabGuard — Al Hussein Technical University",
+          temp_password: tempPassword,
+          login_url: window.location.origin + "/login",
+          from_name: "LabGuard — Al Hussein Technical University",
         },
       }),
     });

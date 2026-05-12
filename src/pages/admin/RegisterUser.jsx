@@ -21,14 +21,9 @@ const ROLES = [
 ];
 
 const DEPARTMENTS = [
-  "Electrical Engineering",
-  "Computer Engineering",
-  "Mechanical Engineering",
-  "Civil Engineering",
-  "Electronics Lab",
-  "Physics Lab",
-  "Chemistry Lab",
-  "Administration",
+  "Engineering",
+  "Information Technology",
+  
 ];
 
 function generateTempPassword() {
