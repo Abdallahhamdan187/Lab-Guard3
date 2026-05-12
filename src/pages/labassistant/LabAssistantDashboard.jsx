@@ -1,4 +1,4 @@
-import { Package, AlertCircle, Wrench, CheckCircle, MapPin, Search } from "lucide-react";
+import { Package, AlertCircle, Wrench, CheckCircle, MapPin, Search, Plus } from "lucide-react";
 import { StatCard } from "@/components/shared/StatCard";
 import { mockEquipment } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
@@ -11,19 +11,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AddEquipmentModal } from "@/components/shared/AddEquipmentModal";
 
 export function LabAssistantDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEquipment, setSelectedEquipment] = useState(null);
   const [maintenanceNotes, setMaintenanceNotes] = useState("");
   const [newStatus, setNewStatus] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [equipment, setEquipment] = useState(mockEquipment);
 
-  const totalEquipment = mockEquipment.length;
-  const availableCount = mockEquipment.filter(e => e.status === 'Available').length;
-  const maintenanceCount = mockEquipment.filter(e => e.status === 'Maintenance').length;
-  const inUseCount = mockEquipment.filter(e => e.status === 'In Use').length;
+  const totalEquipment  = equipment.length;
+  const availableCount  = equipment.filter(e => e.status === 'Available').length;
+  const maintenanceCount = equipment.filter(e => e.status === 'Maintenance').length;
+  const inUseCount      = equipment.filter(e => e.status === 'In Use').length;
 
-  const filteredEquipment = mockEquipment.filter(e =>
+  const filteredEquipment = equipment.filter(e =>
     e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     e.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
     e.serialNumber.toLowerCase().includes(searchQuery.toLowerCase())
@@ -58,10 +61,25 @@ export function LabAssistantDashboard() {
 
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
+      {/* Add Equipment Modal */}
+      <AddEquipmentModal
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onAdd={newEq => setEquipment(prev => [newEq, ...prev])}
+      />
+
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Lab Assistant Dashboard</h1>
-        <p className="text-gray-600 mt-1">Monitor and manage laboratory equipment inventory</p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Lab Assistant Dashboard</h1>
+          <p className="text-gray-600 mt-1">Monitor and manage laboratory equipment inventory</p>
+        </div>
+        <Button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 bg-[#e9333f] hover:bg-[#d12233] text-white"
+        >
+          <Plus size={16} /> Add Equipment
+        </Button>
       </div>
 
       {/* Statistics */}
@@ -191,7 +209,7 @@ export function LabAssistantDashboard() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Equipment by Location</h3>
           <div className="space-y-3">
             {['Lab A', 'Lab B', 'Lab C', 'Lab D'].map((lab) => {
-              const count = mockEquipment.filter(e => e.location.startsWith(lab)).length;
+              const count = equipment.filter(e => e.location.startsWith(lab)).length;
               return (
                 <div key={lab} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-2">
@@ -208,18 +226,18 @@ export function LabAssistantDashboard() {
         <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Maintenance Required</h3>
           <div className="space-y-3">
-            {mockEquipment.filter(e => e.status === 'Maintenance').map((equipment) => (
-              <div key={equipment.id} className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+            {equipment.filter(e => e.status === 'Maintenance').map((eq) => (
+              <div key={eq.id} className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{equipment.name}</p>
-                    <p className="text-xs text-gray-500 mt-1">{equipment.location}</p>
+                    <p className="text-sm font-medium text-gray-900">{eq.name}</p>
+                    <p className="text-xs text-gray-500 mt-1">{eq.location}</p>
                   </div>
                   <Wrench size={16} className="text-orange-600" />
                 </div>
               </div>
             ))}
-            {mockEquipment.filter(e => e.status === 'Maintenance').length === 0 && (
+            {equipment.filter(e => e.status === 'Maintenance').length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 <CheckCircle className="mx-auto mb-2 text-gray-400" size={32} />
                 <p className="text-sm">All equipment in good condition</p>

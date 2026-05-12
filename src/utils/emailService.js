@@ -203,9 +203,9 @@
  */
 
 export const EMAILJS_CONFIG = {
-  publicKey:  "AJhBewuHl2OhJk_lO",   // Dashboard → Account → General → Public Key
-  serviceId:  "service_q7146uv",   // Dashboard → Email Services → your service ID
-  templateId: "template_w037g2e",  // Dashboard → Email Templates → your template ID
+  publicKey:  "YOUR_PUBLIC_KEY",   // Dashboard → Account → General → Public Key
+  serviceId:  "YOUR_SERVICE_ID",   // Dashboard → Email Services → your service ID
+  templateId: "YOUR_TEMPLATE_ID",  // Dashboard → Email Templates → your template ID
 };
 
 export const isEmailJSConfigured = () =>

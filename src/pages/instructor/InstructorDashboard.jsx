@@ -1,4 +1,4 @@
-import { Package, Users, CheckCircle, Clock, TrendingUp, XCircle, AlertTriangle, FileDown, FileSpreadsheet, FileText, X, Search, Filter } from "lucide-react";
+import { Package, Users, CheckCircle, Clock, TrendingUp, XCircle, AlertTriangle, FileDown, FileSpreadsheet, FileText, X, Search, Filter, Plus } from "lucide-react";
 import { StatCard } from "@/components/shared/StatCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { mockTransactions, mockEquipment } from "@/data/mockData";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useState } from "react";
 import { exportToPDF, exportToExcel } from "@/utils/exportUtils";
+import { AddEquipmentModal } from "@/components/shared/AddEquipmentModal";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -269,6 +270,7 @@ function AllTransactionsModal({ onClose }) {
 export function InstructorDashboard() {
   const [pendingList, setPendingList] = useState(mockTransactions.filter(t => t.status === "Pending"));
   const [showAllTxns, setShowAllTxns] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const approvedToday = mockTransactions.filter(t =>
     t.status === "Approved" && new Date(t.approvalDate || "").toDateString() === new Date().toDateString()
@@ -291,6 +293,12 @@ export function InstructorDashboard() {
 
       {showAllTxns && <AllTransactionsModal onClose={() => setShowAllTxns(false)} />}
 
+      <AddEquipmentModal
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onAdd={() => {}}
+      />
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -307,11 +315,16 @@ export function InstructorDashboard() {
             </div>
           )}
           <Button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 bg-[#27ae60] hover:bg-[#219a52] text-white text-sm h-10"
+          >
+            <Plus size={16} /> Add Equipment
+          </Button>
+          <Button
             onClick={() => setShowAllTxns(true)}
             className="flex items-center gap-2 bg-[#2c3e50] hover:bg-[#34495e] text-white text-sm h-10"
           >
-            <FileText size={16} />
-            View All Transactions
+            <FileText size={16} /> View All Transactions
           </Button>
         </div>
       </div>
