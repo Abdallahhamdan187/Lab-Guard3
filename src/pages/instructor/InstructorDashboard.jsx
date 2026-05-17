@@ -15,8 +15,7 @@ import {
 } from "@/components/ui/select";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, Cell, PieChart, Pie, LineChart, Line, Legend, RadarChart,
-  Radar, PolarGrid, PolarAngleAxis
+  BarChart, Bar, Cell, Legend, LineChart, Line, RadarChart, Radar, PolarGrid, PolarAngleAxis
 } from "recharts";
 
 const COLORS = ["#e9333f", "#3498db", "#27ae60", "#f39c12", "#9b59b6"];
@@ -42,20 +41,12 @@ const equipmentUsage = mockEquipment.map(eq => ({
   utilization: Math.round(((eq.totalQuantity - eq.availableQuantity) / eq.totalQuantity) * 100),
 })).sort((a, b) => b.borrows - a.borrows).slice(0, 6);
 
-const purposeData = [
-  { name: "Lab Assignment", value: 38 },
-  { name: "Course Project", value: 28 },
-  { name: "Research",       value: 18 },
-  { name: "Senior Project", value: 12 },
-  { name: "Personal",       value: 4  },
-];
-
 const studentActivityRadar = [
-  { subject: "Requests",       A: 80 },
-  { subject: "On-time Returns",A: 92 },
-  { subject: "Approved Rate",  A: 75 },
-  { subject: "Equipment Care", A: 88 },
-  { subject: "Compliance",     A: 95 },
+  { subject: "Requests",        A: 80 },
+  { subject: "On-time Returns", A: 92 },
+  { subject: "Approved Rate",   A: 75 },
+  { subject: "Equipment Care",  A: 88 },
+  { subject: "Compliance",      A: 95 },
 ];
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -383,49 +374,23 @@ export function InstructorDashboard() {
         </div>
       </div>
 
-      {/* Row 2: Most Used Equipment + Purpose Pie */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-base font-semibold text-gray-900 mb-4">Most Requested Equipment</h3>
-          <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={equipmentUsage} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
-              <XAxis type="number" stroke="#9ca3af" fontSize={11} />
-              <YAxis dataKey="name" type="category" stroke="#9ca3af" fontSize={11} width={100} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="borrows" name="Borrow Requests" radius={[0,4,4,0]}>
-                {equipmentUsage.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-base font-semibold text-gray-900 mb-4">Request Purposes</h3>
-          <ResponsiveContainer width="100%" height={160}>
-            <PieChart>
-              <Pie data={purposeData} cx="50%" cy="50%" outerRadius={65} paddingAngle={2} dataKey="value"
-                label={({ percent }) => `${Math.round(percent * 100)}%`} labelLine={false} fontSize={10}>
-                {purposeData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="space-y-1.5 mt-2">
-            {purposeData.map((d, i) => (
-              <div key={i} className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                  <span className="text-gray-600">{d.name}</span>
-                </div>
-                <span className="font-semibold text-gray-800">{d.value}%</span>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* Row 2: Most Requested Equipment — full width */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h3 className="text-base font-semibold text-gray-900 mb-4">Most Requested Equipment</h3>
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={equipmentUsage} layout="vertical">
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+            <XAxis type="number" stroke="#9ca3af" fontSize={11} />
+            <YAxis dataKey="name" type="category" stroke="#9ca3af" fontSize={11} width={100} />
+            <Tooltip content={<CustomTooltip />} />
+            <Bar dataKey="borrows" name="Borrow Requests" radius={[0,4,4,0]}>
+              {equipmentUsage.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
 
-      {/* Row 3: Equipment Status + Student Radar */}
+      {/* Row 3: Equipment Status + Student Compliance Radar */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h3 className="text-base font-semibold text-gray-900 mb-5">Equipment Status Overview</h3>

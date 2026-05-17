@@ -46,7 +46,6 @@ export function Login() {
       email,
       role: userRole,
       imageUrl: "https://github.com/shadcn.png",
-      // If password doesn't look like a real password (demo), mark as must change
       mustChangePassword: password === "demo1234" ? false : true,
       passwordChanged: false,
     };

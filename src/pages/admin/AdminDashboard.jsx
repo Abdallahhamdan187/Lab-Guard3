@@ -1,7 +1,7 @@
 import { Users, Package, TrendingUp, Activity, UserPlus, ArrowUpRight, Clock } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-  BarChart, Bar, PieChart, Pie, Cell, RadarChart, Radar, PolarGrid, PolarAngleAxis,
+  BarChart, Bar, PieChart, Pie, Cell,
   AreaChart, Area, ComposedChart
 } from "recharts";
 import { toast } from "sonner";
@@ -42,14 +42,6 @@ const monthlyData = [
   { month: "Jan", students: 52, transactions: 189, requests: 70, approved: 63 },
   { month: "Feb", students: 55, transactions: 201, requests: 78, approved: 70 },
   { month: "Mar", students: 58, transactions: 223, requests: 85, approved: 78 },
-];
-
-const roleRadarData = [
-  { subject: "Active Users", students: 85, instructors: 90, assistants: 75 },
-  { subject: "Requests", students: 70, instructors: 30, assistants: 50 },
-  { subject: "Approvals", students: 20, instructors: 95, assistants: 60 },
-  { subject: "Equipment Use", students: 75, instructors: 45, assistants: 80 },
-  { subject: "Returns", students: 68, instructors: 25, assistants: 70 },
 ];
 
 const recentUsers = [
@@ -127,7 +119,7 @@ export function AdminDashboard() {
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Area type="monotone" dataKey="transactions" fill="#e9333f20" stroke="#e9333f" strokeWidth={2} name="Transactions" />
-              <Bar dataKey="students" fill="#3498db40" stroke="#3498db" strokeWidth={1} name="Students" radius={[4,4,0,0]} />
+              <Bar dataKey="students" fill="#3498db40" stroke="#3498db" strokeWidth={1} name="Students" radius={[4, 4, 0, 0]} />
               <Line type="monotone" dataKey="approved" stroke="#27ae60" strokeWidth={2} dot={{ r: 3 }} name="Approved" />
             </ComposedChart>
           </ResponsiveContainer>
@@ -169,7 +161,7 @@ export function AdminDashboard() {
               <XAxis type="number" stroke="#9ca3af" fontSize={11} />
               <YAxis dataKey="name" type="category" stroke="#9ca3af" fontSize={11} width={100} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="borrows" name="Borrow Requests" fill="#e9333f" radius={[0,4,4,0]}>
+              <Bar dataKey="borrows" name="Borrow Requests" fill="#e9333f" radius={[0, 4, 4, 0]}>
                 {equipmentUsage.map((_, i) => (
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}
@@ -204,38 +196,22 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      {/* Row 3: Equipment Utilization + Role Radar */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-base font-semibold text-gray-900 mb-4">Equipment Utilization Rate (%)</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={equipmentUsage}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="name" stroke="#9ca3af" fontSize={10} angle={-20} textAnchor="end" height={50} />
-              <YAxis stroke="#9ca3af" fontSize={11} unit="%" domain={[0, 100]} />
-              <Tooltip content={<CustomTooltip />} formatter={(v) => `${v}%`} />
-              <Bar dataKey="utilization" name="Utilization" radius={[4,4,0,0]}>
-                {equipmentUsage.map((entry, i) => (
-                  <Cell key={i} fill={entry.utilization > 70 ? "#e9333f" : entry.utilization > 40 ? "#f39c12" : "#27ae60"} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-base font-semibold text-gray-900 mb-4">User Role Activity Radar</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <RadarChart data={roleRadarData}>
-              <PolarGrid stroke="#e5e7eb" />
-              <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11 }} />
-              <Radar name="Students" dataKey="students" stroke="#3498db" fill="#3498db" fillOpacity={0.15} strokeWidth={2} />
-              <Radar name="Instructors" dataKey="instructors" stroke="#27ae60" fill="#27ae60" fillOpacity={0.15} strokeWidth={2} />
-              <Radar name="Lab Assistants" dataKey="assistants" stroke="#f39c12" fill="#f39c12" fillOpacity={0.15} strokeWidth={2} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
-            </RadarChart>
-          </ResponsiveContainer>
-        </div>
+      {/* Row 3: Equipment Utilization Rate — full width */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h3 className="text-base font-semibold text-gray-900 mb-4">Equipment Utilization Rate (%)</h3>
+        <ResponsiveContainer width="100%" height={250}>
+          <BarChart data={equipmentUsage}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis dataKey="name" stroke="#9ca3af" fontSize={10} angle={-20} textAnchor="end" height={50} />
+            <YAxis stroke="#9ca3af" fontSize={11} unit="%" domain={[0, 100]} />
+            <Tooltip content={<CustomTooltip />} formatter={(v) => `${v}%`} />
+            <Bar dataKey="utilization" name="Utilization" radius={[4, 4, 0, 0]}>
+              {equipmentUsage.map((entry, i) => (
+                <Cell key={i} fill={entry.utilization > 70 ? "#e9333f" : entry.utilization > 40 ? "#f39c12" : "#27ae60"} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
 
       {/* Row 4: Recent Users + Logs */}

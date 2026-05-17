@@ -23,7 +23,7 @@ const ROLES = [
 const DEPARTMENTS = [
   "Engineering",
   "Information Technology",
-  
+
 ];
 
 function generateTempPassword() {
@@ -81,10 +81,10 @@ export function RegisterUser() {
 
   const sendValidationEmail = async () => {
     const result = await sendRegistrationEmail({
-      toName:       form.fullName,
-      toEmail:      form.email,
-      role:         selectedRole?.label || form.role,
-      department:   form.department,
+      toName: form.fullName,
+      toEmail: form.email,
+      role: selectedRole?.label || form.role,
+      department: form.department,
       tempPassword: form.tempPassword,
     });
     if (!result.success) throw new Error(result.message);
@@ -204,11 +204,10 @@ export function RegisterUser() {
                     key={r.value}
                     type="button"
                     onClick={() => set("role", r.value)}
-                    className={`p-3 rounded-xl border-2 text-center text-sm font-medium transition-all ${
-                      form.role === r.value
+                    className={`p-3 rounded-xl border-2 text-center text-sm font-medium transition-all ${form.role === r.value
                         ? "border-current shadow-md scale-105"
                         : "border-gray-200 text-gray-600 hover:border-gray-300"
-                    }`}
+                      }`}
                     style={form.role === r.value ? { borderColor: r.color, color: r.color, backgroundColor: r.color + "10" } : {}}
                   >
                     {r.label}
